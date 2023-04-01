@@ -1,1 +1,4 @@
 *.o
+cryptest.exe
+libcryptopp.a
+adhoc.cpp 
