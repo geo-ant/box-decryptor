@@ -11,9 +11,11 @@
 
 int main(int argc, char *argv[])
 {
+  auto exe_name = std::string(argv[0]);
+
 	if (argc < 4)
 	{
-		std::cout << "Usage: bc-file-decryptor.exe "
+		std::cout << "Usage: " << exe_name << " "
 			<< "[path to .bckey file] "
 			<< "[path to encrypted file] "
 			<< "[pwd] "
