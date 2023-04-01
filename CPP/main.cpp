@@ -31,11 +31,14 @@ int main(int argc, char *argv[])
 		// ============================================
 		// AES decryption of private key in .bckey file
 		// =============================================
+    
+    auto password = std::string(argv[3]);
+    std::cout << "Password: " << password << std::endl;
 
 		// collect information about the user account
 		AccountData accountInfo;
 		accountInfo.ParseBCKeyFile(std::string(argv[1]));
-		accountInfo.SetPassword(std::string(argv[3]));
+		accountInfo.SetPassword(password);
 
 		// decrypt the private key from the .bckey file
 		std::string decryptedPrivateKey;
