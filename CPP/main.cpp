@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
 		std::string decryptedPrivateKey;
 		AESHelper::DecryptDataPBKDF2(accountInfo.GetEncryptedPrivateKey(), accountInfo.GetPassword(), accountInfo.GetPBKDF2Salt(), accountInfo.GetPBKDF2Iterations(), decryptedPrivateKey);
 
-
 		// =============================================
 		// RSA decryption of file information (header)
 		// =============================================

@@ -58,6 +58,7 @@ bool AESHelper::DecryptDataPBKDF2(const std::string& data, const std::string& pb
 	else
 	{
 		throw std::runtime_error("Password and salt for the PBKDF2 algorithm can not be empty and the iteration count must be bigger than zero");
+    return false;
 	}
 }
 
