@@ -4,9 +4,9 @@ some major usability improvements and a bit of future proofing.
 
 ## Context
 [Boxcryptor](https://www.boxcryptor.com/en/) was bought by dropbox and it seems
-their boxcryptor service is slowly dying. Also the boxcryptor portable apps
+their boxcryptor service is slowly dying. Unfortunately the boxcryptor portable apps
 that I tried (for Linux and Mac) did not help me as much to decrypt my files
-because they would constantly error our when downloading files from my dropbox.
+because they would constantly give errors when downloading files from my dropbox.
 That gave me a burst of panic because as of now I have tons of boxcryptr encrypted
 files (`*.bc`) which might become useless in future. That's a problem.
 
