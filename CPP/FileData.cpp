@@ -9,8 +9,8 @@
 // this method should ideally be implemented using a proper JSON library,
 // but for the purpose of demonstrating which infos are needed from
 // the file header simple string searches should be sufficient
-void FileData::ParseHeader(const std::filesystem::path &encryptedFilePath,
-                           const std::string &outputFilePath) {
+FileData::FileData(const std::filesystem::path &encryptedFilePath,
+                   const std::string &outputFilePath) {
   std::cout << "Parsing header of encrypted file: '" << encryptedFilePath << "'"
             << std::endl;
 
@@ -132,7 +132,7 @@ void FileData::ParseHeader(const std::filesystem::path &encryptedFilePath,
     throw std::runtime_error("Could not find file key in file header");
   }
 
-  this->m_outputFilePath = this->CheckOutputFilepath(outputFilePath);
+  this->m_outputFilePath = outputFilePath;
 
   std::cout << "Parsing finished" << std::endl;
 }
@@ -160,59 +160,4 @@ unsigned int FileData::GetHeaderLen() const {
 
 unsigned int FileData::GetCipherPadding() const {
   return this->m_headerData.cipherPaddingLen;
-}
-
-// appends a incrementing number to either the output path
-// or the original path if no output was given until
-// a path is found for which no file exists yet
-// CAUTION: this can break if file names are too long
-/*private*/ std::string
-FileData::CheckOutputFilepath(const std::string &currentPath) {
-  int postFix = 1;
-  std::string newPath = currentPath;
-  std::string originalPath = currentPath;
-  bool suitablePathFound = false;
-  while (!suitablePathFound) {
-    if (newPath.length() == 0) {
-      std::cout << "Output filepath is empty, deriving it from input"
-                << std::endl;
-
-      // first, get rid of the .bc extension
-      size_t startPos = 0;
-      size_t endPos = this->m_encryptedFilePath.find_last_of(".");
-      if (endPos == std::string::npos) {
-        break;
-      }
-
-      newPath = originalPath =
-          this->m_encryptedFilePath.substr(startPos, endPos);
-    }
-
-    if (std::ifstream(newPath)) {
-      std::cout << "Output filepath '" << newPath
-                << "' already exists, deriving a new one" << std::endl;
-
-      // insert a number after the file name
-      size_t extensionPos = originalPath.find_last_of(".");
-      if (extensionPos == std::string::npos) {
-        break;
-      }
-
-      newPath = originalPath.substr(0, extensionPos) + " (" +
-                std::to_string(postFix) + ")" +
-                originalPath.substr(extensionPos);
-      ++postFix;
-    } else {
-      suitablePathFound = true;
-      break;
-    }
-
-    std::cout << "New output filepath: " << newPath << std::endl;
-  }
-
-  if (!suitablePathFound) {
-    throw std::runtime_error("Could not find a usable output filepath");
-  }
-
-  return newPath;
 }

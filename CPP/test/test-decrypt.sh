@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# this is a crude test script that is used in the cmake to test if the decryption works
+# it needs the boxcryptor pasword and keyfile to be set as environment variables,
+# see below
+
 if [-y "$BOXCRYPTOR_PASSWORD" ]; then
 	echo "BOXCRYPTOR_PASSWORD environment variable is not set"
 	exit 1

@@ -18,9 +18,11 @@ public:
   FileData() = default;
   FileData(const FileData &) = delete;
   FileData &operator=(const FileData &) = delete;
+  /// collect some information about the file being decrypted
+  /// throws an exception on error
+  FileData(std::filesystem::path const &encryptedFilePath,
+           std::string const &outputFilePath);
 
-  void ParseHeader(const std::filesystem::path &encryptedFilePath,
-                   const std::string &outputFilePath);
   std::string GetOutputFilepath() const;
   std::string GetEncryptedFileKey() const;
   std::string GetEncryptedFilePath() const;
@@ -40,8 +42,6 @@ private:
   // The following byte sequence corresponds to bc01;
   // Note: There is another file version for bc02 now.
   const std::vector<byte> m_supportedFileVersion = {98, 99, 48, 49};
-
-  std::string CheckOutputFilepath(const std::string &currentPath);
 };
 
 #endif

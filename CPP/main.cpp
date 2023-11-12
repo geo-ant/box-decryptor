@@ -52,9 +52,7 @@ int main(int argc, char *argv[]) {
     // =============================================
 
     // collect information about the file to be decrypted
-    FileData fileData;
-    auto outputFilepath = argc > 4 ? std::string(argv[4]) : "";
-    fileData.ParseHeader(std::string(argv[2]), outputFilepath);
+    FileData fileData(encryptedFilePath, outputFilePath);
 
     // decrypt the file key (from file header) used for decryption of file data
     std::vector<byte> decryptedFileKey;
