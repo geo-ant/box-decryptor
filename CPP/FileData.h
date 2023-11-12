@@ -2,6 +2,7 @@
 #define FILEINFORMATION_H
 
 #include "TypeDefs.h"
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -18,7 +19,7 @@ public:
   FileData(const FileData &) = delete;
   FileData &operator=(const FileData &) = delete;
 
-  void ParseHeader(const std::string &encryptedFilePath,
+  void ParseHeader(const std::filesystem::path &encryptedFilePath,
                    const std::string &outputFilePath);
   std::string GetOutputFilepath() const;
   std::string GetEncryptedFileKey() const;

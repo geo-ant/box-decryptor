@@ -1,5 +1,6 @@
 #include "FileData.h"
 #include "TypeDefs.h"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -8,12 +9,12 @@
 // this method should ideally be implemented using a proper JSON library,
 // but for the purpose of demonstrating which infos are needed from
 // the file header simple string searches should be sufficient
-void FileData::ParseHeader(const std::string &encryptedFilePath,
+void FileData::ParseHeader(const std::filesystem::path &encryptedFilePath,
                            const std::string &outputFilePath) {
   std::cout << "Parsing header of encrypted file: '" << encryptedFilePath << "'"
             << std::endl;
 
-  if (encryptedFilePath.substr(encryptedFilePath.length() - 3) != ".bc") {
+  if (encryptedFilePath.extension() != ".bc") {
     throw std::runtime_error(
         "Given filepath does not have the right extension ('.bc'), please "
         "specify a Boxcryptor encrypted file");
@@ -22,7 +23,7 @@ void FileData::ParseHeader(const std::string &encryptedFilePath,
   std::ifstream headerFile(encryptedFilePath, std::ios::binary);
   if (!headerFile.good()) {
     std::string errorMsg(
-        "Encrypted file (" + encryptedFilePath +
+        "Encrypted file (" + encryptedFilePath.string() +
         ") can't be opened (make sure the provided path is correct, the file "
         "exists and you have the right to open the file)");
     throw std::runtime_error(errorMsg);

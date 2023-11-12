@@ -56,3 +56,19 @@ add_custom_command(
 target_link_directories(bc-decrypt PRIVATE
                         ${CMAKE_CURRENT_SOURCE_DIR}/../libcryptopp700)
 target_link_libraries(bc-decrypt PRIVATE cryptopp)
+
+enable_testing()
+
+# copy the contents of the test folder next to the executable
+add_custom_command(
+  TARGET bc-decrypt
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/test
+          ${CMAKE_CURRENT_BINARY_DIR}
+  VERBATIM)
+
+# execute the script test-decrypt.sh after the build with the arguments
+# helloworld.txt.bc and helloworld.txt.good this will decrypt the file and
+# compare it to the good file use the cmake testing framework  to do this
+add_test(NAME test-decrypt COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test-decrypt.sh
+                                   helloworld.txt.bc helloworld.txt.good)
