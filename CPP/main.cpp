@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
     AccountData const accountInfo(keyfilePath, password);
 
     // decrypt the private key from the .bckey file
+    // this is the same for all files of one user account
     std::string const decryptedPrivateKey =
         util::decrypt_private_key(accountInfo);
 
@@ -51,42 +52,13 @@ int main(int argc, char *argv[]) {
     // RSA decryption of file information (header)
     // =============================================
 
-    // collect information about the file to be decrypted
-    FileData const fileData(encryptedFilePath, outputFilePath);
-
-    // decrypt the file key (from file header) used for decryption of file data
-    auto const decryptedFileKey = RSAHelper::DecryptFileKey(
-        fileData.GetEncryptedFileKey(), decryptedPrivateKey);
-
-    auto const fileCryptoKey = std::vector<byte>(decryptedFileKey.begin() + 32,
-                                                 decryptedFileKey.begin() + 64);
-
-    // =============================================
-    // AES decryption of encrypted file
-    // =============================================
-
-    // decrypt the file data ...
-    std::vector<byte> const decryptedFileBytes = AESHelper::DecryptFile(
-        fileData.GetEncryptedFilePath(), fileCryptoKey, fileData.GetBaseIVec(),
-        fileData.GetBlockSize(), fileData.GetHeaderLen(),
-        fileData.GetCipherPadding());
-
-    std::ofstream ofs(fileData.GetOutputFilepath(), std::ios::binary);
-    if (!ofs.good()) {
-      std::string errorMsg(
-          "Can't create decrypted file at location '" +
-          fileData.GetOutputFilepath().string() +
-          "' (make sure you have the necessary file system rights to write to "
-          "this location or specify another path)");
-      throw std::runtime_error(errorMsg);
-    }
+    auto const decryptedFileBytes =
+        util::decrypt_file(encryptedFilePath, decryptedPrivateKey);
 
     // ... and write it to disk
-    ofs.write((char *)decryptedFileBytes.data(), decryptedFileBytes.size());
+    util::write_file(outputFilePath, decryptedFileBytes);
 
-    std::cout << "Successfully decrypted file '"
-              << fileData.GetEncryptedFilePath() << "', output: '"
-              << fileData.GetOutputFilepath() << "'" << std::endl;
+    std::cout << "Successfully decrypted file '";
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
   }

@@ -9,8 +9,7 @@
 // this method should ideally be implemented using a proper JSON library,
 // but for the purpose of demonstrating which infos are needed from
 // the file header simple string searches should be sufficient
-FileData::FileData(const std::filesystem::path &encryptedFilePath,
-                   const std::string &outputFilePath) {
+FileData::FileData(const std::filesystem::path &encryptedFilePath) {
   std::cout << "Parsing header of encrypted file: '" << encryptedFilePath << "'"
             << std::endl;
 
@@ -132,13 +131,7 @@ FileData::FileData(const std::filesystem::path &encryptedFilePath,
     throw std::runtime_error("Could not find file key in file header");
   }
 
-  this->m_outputFilePath = outputFilePath;
-
   std::cout << "Parsing finished" << std::endl;
-}
-
-std::filesystem::path const &FileData::GetOutputFilepath() const {
-  return this->m_outputFilePath;
 }
 
 std::string FileData::GetEncryptedFileKey() const {

@@ -20,10 +20,8 @@ public:
   FileData &operator=(const FileData &) = delete;
   /// collect some information about the file being decrypted
   /// throws an exception on error
-  FileData(std::filesystem::path const &encryptedFilePath,
-           std::string const &outputFilePath);
+  FileData(std::filesystem::path const &encryptedFilePath);
 
-  std::filesystem::path const &GetOutputFilepath() const;
   std::string GetEncryptedFileKey() const;
   std::filesystem::path const &GetEncryptedFilePath() const;
   std::string GetBaseIVec() const;
@@ -37,7 +35,6 @@ private:
   std::filesystem::path m_encryptedFilePath;
   unsigned int m_blockSize;
   HeaderData m_headerData;
-  std::filesystem::path m_outputFilePath;
 
   // The following byte sequence corresponds to bc01;
   // Note: There is another file version for bc02 now.
