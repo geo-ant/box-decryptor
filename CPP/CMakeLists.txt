@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 
 # Not ideal to use this global variable, but necessary to make sure that tooling
 # and projects use the same version
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
 # information about processor count
 include(ProcessorCount)
@@ -56,6 +57,12 @@ add_custom_command(
 target_link_directories(bc-decrypt PRIVATE
                         ${CMAKE_CURRENT_SOURCE_DIR}/../libcryptopp700)
 target_link_libraries(bc-decrypt PRIVATE cryptopp)
+
+if(MSVC)
+  target_compile_options(bc-decrypt PRIVATE /W4 /WX)
+else()
+  target_compile_options(bc-decrypt PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
 
 enable_testing()
 

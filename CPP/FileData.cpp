@@ -137,7 +137,7 @@ FileData::FileData(const std::filesystem::path &encryptedFilePath,
   std::cout << "Parsing finished" << std::endl;
 }
 
-std::string FileData::GetOutputFilepath() const {
+std::filesystem::path const &FileData::GetOutputFilepath() const {
   return this->m_outputFilePath;
 }
 
@@ -145,7 +145,7 @@ std::string FileData::GetEncryptedFileKey() const {
   return this->m_encryptedFileKey;
 }
 
-std::string FileData::GetEncryptedFilePath() const {
+std::filesystem::path const &FileData::GetEncryptedFilePath() const {
   return this->m_encryptedFilePath;
 }
 

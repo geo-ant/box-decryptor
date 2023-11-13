@@ -23,9 +23,9 @@ public:
   FileData(std::filesystem::path const &encryptedFilePath,
            std::string const &outputFilePath);
 
-  std::string GetOutputFilepath() const;
+  std::filesystem::path const &GetOutputFilepath() const;
   std::string GetEncryptedFileKey() const;
-  std::string GetEncryptedFilePath() const;
+  std::filesystem::path const &GetEncryptedFilePath() const;
   std::string GetBaseIVec() const;
   unsigned int GetBlockSize() const;
   unsigned int GetHeaderLen() const;
@@ -34,10 +34,10 @@ public:
 private:
   std::string m_encryptedFileKey;
   std::string m_baseIVec;
-  std::string m_encryptedFilePath;
+  std::filesystem::path m_encryptedFilePath;
   unsigned int m_blockSize;
   HeaderData m_headerData;
-  std::string m_outputFilePath;
+  std::filesystem::path m_outputFilePath;
 
   // The following byte sequence corresponds to bc01;
   // Note: There is another file version for bc02 now.

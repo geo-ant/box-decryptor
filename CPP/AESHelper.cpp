@@ -70,7 +70,28 @@ bool AESHelper::DecryptDataPBKDF2(const std::string &data,
   }
 }
 
-bool AESHelper::DecryptFile(const std::string &encryptedFilePath,
+static std::vector<char> read_file_to_vec(std::filesystem::path const &path) {
+  // open the encrypted file, ...
+  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+  if (!ifs.good()) {
+    std::string errorMsg(
+        "Encrypted file (" + path.string() +
+        ") can't be opened (make sure the provided path is correct, the file "
+        "exists and you have the right to open the file)");
+    throw std::runtime_error(errorMsg);
+  }
+
+  // ... get the size ...
+  std::streamoff pos = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+
+  // ... and copy it into a byte vector to work with the data
+  std::vector<char> fileBytes(static_cast<size_t>(pos));
+  ifs.read(&fileBytes[0], pos);
+  return fileBytes;
+}
+
+bool AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
                             const std::vector<byte> &fileCryptoKey,
                             const std::string &baseIVec, unsigned int blockSize,
                             unsigned int offset, unsigned int padding,
@@ -78,100 +99,83 @@ bool AESHelper::DecryptFile(const std::string &encryptedFilePath,
   std::cout << "AES decryption of file '" << encryptedFilePath << "' started"
             << std::endl;
 
-  if (fileCryptoKey.size() > 0 && blockSize > 0) {
-    // open the encrypted file, ...
-    std::ifstream ifs(encryptedFilePath, std::ios::binary | std::ios::ate);
-    if (!ifs.good()) {
-      std::string errorMsg(
-          "Encrypted file (" + encryptedFilePath +
-          ") can't be opened (make sure the provided path is correct, the file "
-          "exists and you have the right to open the file)");
-      throw std::runtime_error(errorMsg);
-    }
-
-    // ... get the size ...
-    std::streamoff pos = ifs.tellg();
-    ifs.seekg(0, std::ios::beg);
-
-    // ... and copy it into a byte vector to work with the data
-    std::vector<char> fileBytes(static_cast<size_t>(pos));
-    ifs.read(&fileBytes[0], pos);
-
-    // IVec in file header is base 64 encoded
-    std::vector<byte> decodedFileIV;
-    Base64Helper::Decode(baseIVec, decodedFileIV);
-
-    // create result vector and reserve enough space
-    // to fit the complete decrypted file
-    decryptedFileBytes.clear();
-    decryptedFileBytes.reserve(fileBytes.size());
-    unsigned long blockNo = 0;
-
-    // report initial status
-    size_t fileSize = fileBytes.size();
-    std::string fileSizeStr = std::to_string(fileSize);
-    auto fileSizeFivePer = static_cast<size_t>(std::floor(fileSize * 0.05));
-    std::string byteProgress = " (0 / " + fileSizeStr + " bytes)";
-    std::cout << "Progress: [" << std::setfill(' ') << std::setw(21) << "]"
-              << std::left << std::setw(79) << byteProgress << std::right;
-
-    // decrypt each block seperately with its own initialization vector
-    for (size_t byteNo = offset, nextStatusThreshold = offset, currentStep = 0;
-         byteNo < fileSize; byteNo += blockSize, ++blockNo) {
-      auto blockIVec =
-          AESHelper::ComputeBlockIVec(decodedFileIV, blockNo, fileCryptoKey);
-
-      // get the input data for the current block (the last block may be shorter
-      // than [blockSize] bytes)
-      auto iterEnd = (byteNo + blockSize >= fileSize)
-                         ? fileBytes.end()
-                         : fileBytes.begin() + byteNo + blockSize;
-      std::vector<byte> blockInput(fileBytes.begin() + byteNo, iterEnd);
-
-      // use PKCS7 padding for the last block if a cipher padding size greater
-      // than 0 was specified in file header
-      auto currentPadding =
-          (iterEnd == fileBytes.end() && padding > 0)
-              ? CryptoPP::StreamTransformationFilter::PKCS_PADDING
-              : CryptoPP::StreamTransformationFilter::NO_PADDING;
-
-      // get the decrypted data for this block ...
-      std::string decryptedBlockBytes;
-      AESHelper::DecryptData(blockInput, fileCryptoKey, blockIVec,
-                             decryptedBlockBytes, true, currentPadding);
-
-      // ... and append it to the data of previous blocks
-      decryptedFileBytes.insert(decryptedFileBytes.end(),
-                                decryptedBlockBytes.begin(),
-                                decryptedBlockBytes.end());
-
-      // report intermediate status every 5%
-      if (byteNo > nextStatusThreshold) {
-        int steps = byteNo / nextStatusThreshold;
-        nextStatusThreshold += fileSizeFivePer * steps;
-
-        currentStep += steps;
-        byteProgress =
-            " (" + std::to_string(byteNo) + " / " + fileSizeStr + " bytes)";
-        std::cout << std::setfill('\b') << std::setw(100) << ""
-                  << std::setfill('#') << std::setw(currentStep) << ""
-                  << std::setfill(' ') << std::setw(21 - currentStep) << "]"
-                  << std::left << std::setw(79) << byteProgress << std::right;
-      }
-    }
-
-    // newline and buffer flush after status report
-    byteProgress = " (" + fileSizeStr + " / " + fileSizeStr + " bytes)";
-    std::cout << std::setfill('\b') << std::setw(100) << "" << std::setfill('#')
-              << std::setw(21) << "]" << std::setfill(' ') << std::left
-              << std::setw(79) << byteProgress << std::right << std::endl;
-
-    std::cout << "AES decryption of file finished" << std::endl;
-    return true;
-  } else {
+  if (fileCryptoKey.empty() || blockSize == 0) {
     throw std::runtime_error("Crypto key for file can't be empty and block "
                              "size must be bigger than zero");
   }
+  std::vector fileBytes = read_file_to_vec(encryptedFilePath);
+
+  // IVec in file header is base 64 encoded
+  std::vector<byte> decodedFileIV;
+  Base64Helper::Decode(baseIVec, decodedFileIV);
+
+  // create result vector and reserve enough space
+  // to fit the complete decrypted file
+  decryptedFileBytes.clear();
+  decryptedFileBytes.reserve(fileBytes.size());
+  unsigned long blockNo = 0;
+
+  // report initial status
+  size_t fileSize = fileBytes.size();
+  std::string fileSizeStr = std::to_string(fileSize);
+  auto fileSizeFivePer = static_cast<size_t>(std::floor(fileSize * 0.05));
+  std::string byteProgress = " (0 / " + fileSizeStr + " bytes)";
+  std::cout << "Progress: [" << std::setfill(' ') << std::setw(21) << "]"
+            << std::left << std::setw(79) << byteProgress << std::right;
+
+  // decrypt each block seperately with its own initialization vector
+  for (size_t byteNo = offset, nextStatusThreshold = offset, currentStep = 0;
+       byteNo < fileSize; byteNo += blockSize, ++blockNo) {
+    auto blockIVec =
+        AESHelper::ComputeBlockIVec(decodedFileIV, blockNo, fileCryptoKey);
+
+    // get the input data for the current block (the last block may be shorter
+    // than [blockSize] bytes)
+    auto iterEnd = (byteNo + blockSize >= fileSize)
+                       ? fileBytes.end()
+                       : fileBytes.begin() + byteNo + blockSize;
+    std::vector<byte> blockInput(fileBytes.begin() + byteNo, iterEnd);
+
+    // use PKCS7 padding for the last block if a cipher padding size greater
+    // than 0 was specified in file header
+    auto currentPadding =
+        (iterEnd == fileBytes.end() && padding > 0)
+            ? CryptoPP::StreamTransformationFilter::PKCS_PADDING
+            : CryptoPP::StreamTransformationFilter::NO_PADDING;
+
+    // get the decrypted data for this block ...
+    std::string decryptedBlockBytes;
+    AESHelper::DecryptData(blockInput, fileCryptoKey, blockIVec,
+                           decryptedBlockBytes, true, currentPadding);
+
+    // ... and append it to the data of previous blocks
+    decryptedFileBytes.insert(decryptedFileBytes.end(),
+                              decryptedBlockBytes.begin(),
+                              decryptedBlockBytes.end());
+
+    // report intermediate status every 5%
+    if (byteNo > nextStatusThreshold) {
+      int steps = byteNo / nextStatusThreshold;
+      nextStatusThreshold += fileSizeFivePer * steps;
+
+      currentStep += steps;
+      byteProgress =
+          " (" + std::to_string(byteNo) + " / " + fileSizeStr + " bytes)";
+      std::cout << std::setfill('\b') << std::setw(100) << ""
+                << std::setfill('#') << std::setw(currentStep) << ""
+                << std::setfill(' ') << std::setw(21 - currentStep) << "]"
+                << std::left << std::setw(79) << byteProgress << std::right;
+    }
+  }
+
+  // newline and buffer flush after status report
+  byteProgress = " (" + fileSizeStr + " / " + fileSizeStr + " bytes)";
+  std::cout << std::setfill('\b') << std::setw(100) << "" << std::setfill('#')
+            << std::setw(21) << "]" << std::setfill(' ') << std::left
+            << std::setw(79) << byteProgress << std::right << std::endl;
+
+  std::cout << "AES decryption of file finished" << std::endl;
+  return true;
 }
 
 // from

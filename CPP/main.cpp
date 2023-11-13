@@ -75,8 +75,8 @@ int main(int argc, char *argv[]) {
     std::ofstream ofs(fileData.GetOutputFilepath(), std::ios::binary);
     if (!ofs.good()) {
       std::string errorMsg(
-          "Can't create encrypted file at location '" +
-          fileData.GetOutputFilepath() +
+          "Can't create decrypted file at location '" +
+          fileData.GetOutputFilepath().string() +
           "' (make sure you have the necessary file system rights to write to "
           "this location or specify another path)");
       throw std::runtime_error(errorMsg);

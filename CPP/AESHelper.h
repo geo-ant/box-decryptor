@@ -3,6 +3,7 @@
 
 #include "TypeDefs.h"
 #include "filters.h"
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -16,7 +17,7 @@ public:
                                 unsigned int pbkdf2Iterations,
                                 std::string &decryptedData);
 
-  static bool DecryptFile(const std::string &encryptedFilePath,
+  static bool DecryptFile(std::filesystem::path const &encryptedFilePath,
                           const std::vector<byte> &fileCryptoKey,
                           const std::string &baseIVec, unsigned int blockSize,
                           unsigned int offset, unsigned int padding,

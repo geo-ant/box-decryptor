@@ -30,6 +30,10 @@ if [ -z "$known_good_file" ]; then
 	exit 1
 fi
 
+if [ -f "$outfile" ]; then
+	rm "$outfile"
+fi
+
 # Your decryption command here, writing output to a file
 ./bc-decrypt "$BOXCRYPTOR_KEYFILE" "$1" "$password" "$outfile"
 
