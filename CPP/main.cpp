@@ -52,15 +52,14 @@ int main(int argc, char *argv[]) {
     // =============================================
 
     // collect information about the file to be decrypted
-    FileData fileData(encryptedFilePath, outputFilePath);
+    FileData const fileData(encryptedFilePath, outputFilePath);
 
     // decrypt the file key (from file header) used for decryption of file data
-    std::vector<byte> decryptedFileKey;
-    RSAHelper::DecryptData(fileData.GetEncryptedFileKey(), decryptedPrivateKey,
-                           decryptedFileKey);
+    auto const decryptedFileKey = RSAHelper::DecryptFileKey(
+        fileData.GetEncryptedFileKey(), decryptedPrivateKey);
 
-    auto fileCryptoKey = std::vector<byte>(decryptedFileKey.begin() + 32,
-                                           decryptedFileKey.begin() + 64);
+    auto const fileCryptoKey = std::vector<byte>(decryptedFileKey.begin() + 32,
+                                                 decryptedFileKey.begin() + 64);
 
     // =============================================
     // AES decryption of encrypted file
