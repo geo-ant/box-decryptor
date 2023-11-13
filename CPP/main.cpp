@@ -66,11 +66,10 @@ int main(int argc, char *argv[]) {
     // =============================================
 
     // decrypt the file data ...
-    std::vector<byte> decryptedFileBytes;
-    AESHelper::DecryptFile(fileData.GetEncryptedFilePath(), fileCryptoKey,
-                           fileData.GetBaseIVec(), fileData.GetBlockSize(),
-                           fileData.GetHeaderLen(), fileData.GetCipherPadding(),
-                           decryptedFileBytes);
+    std::vector<byte> const decryptedFileBytes = AESHelper::DecryptFile(
+        fileData.GetEncryptedFilePath(), fileCryptoKey, fileData.GetBaseIVec(),
+        fileData.GetBlockSize(), fileData.GetHeaderLen(),
+        fileData.GetCipherPadding());
 
     std::ofstream ofs(fileData.GetOutputFilepath(), std::ios::binary);
     if (!ofs.good()) {

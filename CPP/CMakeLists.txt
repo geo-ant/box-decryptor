@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.24)
 # Not ideal to use this global variable, but necessary to make sure that tooling
 # and projects use the same version
 set(CMAKE_CXX_STANDARD 17)
+# ATTENTION: libcryptopp700 does not work for C++20. We get compiler errors in
+# the headers and I don't know why
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 

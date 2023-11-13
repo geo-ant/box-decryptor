@@ -17,11 +17,11 @@ public:
                                 unsigned int pbkdf2Iterations,
                                 std::string &decryptedData);
 
-  static bool DecryptFile(std::filesystem::path const &encryptedFilePath,
-                          const std::vector<byte> &fileCryptoKey,
-                          const std::string &baseIVec, unsigned int blockSize,
-                          unsigned int offset, unsigned int padding,
-                          std::vector<byte> &decryptedFileBytes);
+  static std::vector<byte>
+  DecryptFile(std::filesystem::path const &encryptedFilePath,
+              const std::vector<byte> &fileCryptoKey,
+              const std::string &baseIVec, unsigned int blockSize,
+              unsigned int offset, unsigned int padding);
 
 private:
   static std::vector<byte> ComputeBlockIVec(std::vector<byte> ivec,

@@ -91,11 +91,11 @@ static std::vector<char> read_file_to_vec(std::filesystem::path const &path) {
   return fileBytes;
 }
 
-bool AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
-                            const std::vector<byte> &fileCryptoKey,
-                            const std::string &baseIVec, unsigned int blockSize,
-                            unsigned int offset, unsigned int padding,
-                            std::vector<byte> &decryptedFileBytes) {
+std::vector<byte>
+AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
+                       const std::vector<byte> &fileCryptoKey,
+                       const std::string &baseIVec, unsigned int blockSize,
+                       unsigned int offset, unsigned int padding) {
   std::cout << "AES decryption of file '" << encryptedFilePath << "' started"
             << std::endl;
 
@@ -104,6 +104,7 @@ bool AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
                              "size must be bigger than zero");
   }
   std::vector fileBytes = read_file_to_vec(encryptedFilePath);
+  std::vector<byte> decryptedFileBytes;
 
   // IVec in file header is base 64 encoded
   std::vector<byte> decodedFileIV;
@@ -175,7 +176,7 @@ bool AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
             << std::setw(79) << byteProgress << std::right << std::endl;
 
   std::cout << "AES decryption of file finished" << std::endl;
-  return true;
+  return decryptedFileBytes;
 }
 
 // from

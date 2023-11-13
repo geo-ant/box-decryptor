@@ -10,4 +10,10 @@ std::string decrypt_private_key(AccountData const &account_data) {
       decryptedPrivateKey);
   return decryptedPrivateKey;
 }
+
+/* std::vector<byte> */
+/* util::decrypt_file(std::filesystem::path const &encryptedFilePath) { */
+
+/* } */
+
 } // namespace util
