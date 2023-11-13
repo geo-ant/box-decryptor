@@ -25,12 +25,12 @@ int main(int argc, char *argv[]) {
   // for the sake of keeping this program short just catch
   // all exceptions in one place and show the error before exiting
   try {
-    std::filesystem::path keyfilePath(argv[1]);
-    std::filesystem::path encryptedFilePath(argv[2]);
-    std::string password(argv[3]);
-    // TODO make optional
-    std::filesystem::path outputFilePath =
-        argc > 4 ? std::filesystem::path(argv[4]) : "";
+    std::filesystem::path const keyfilePath(argv[1]);
+    std::filesystem::path const encryptedFilePath(argv[2]);
+    std::string const password(argv[3]);
+    std::filesystem::path const outputFilePath =
+        argc > 4 ? std::filesystem::path(argv[4])
+                 : std::filesystem::path(encryptedFilePath).replace_extension();
 
     std::cout << "Decryption process started" << std::endl;
 
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     AccountData const accountInfo(keyfilePath, password);
 
     // decrypt the private key from the .bckey file
-    // this is the same for all files of one user account
+    // this is the same for all files of this account
     std::string const decryptedPrivateKey =
         util::decrypt_private_key(accountInfo);
 
