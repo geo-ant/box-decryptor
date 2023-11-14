@@ -16,8 +16,6 @@ bool AESHelper::DecryptDataPBKDF2(const std::string &data,
                                   const std::string &pbkdf2Salt,
                                   unsigned int pbkdf2Iterations,
                                   std::string &decryptedData) {
-  std::cout << "AES decryption of data started" << std::endl;
-
   if (pbkdf2Password.length() > 0 && pbkdf2Salt.length() > 0 &&
       pbkdf2Iterations > 0) {
     // data and salt are base 64 encoded
@@ -60,7 +58,6 @@ bool AESHelper::DecryptDataPBKDF2(const std::string &data,
     AESHelper::DecryptData(privateKeyBytes, cryptoKey, IVec, decryptedData,
                            false);
 
-    std::cout << "AES decryption finished" << std::endl;
     return true;
   } else {
     throw std::runtime_error(
@@ -96,9 +93,6 @@ AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
                        const std::vector<byte> &fileCryptoKey,
                        const std::string &baseIVec, unsigned int blockSize,
                        unsigned int offset, unsigned int padding) {
-  std::cout << "AES decryption of file '" << encryptedFilePath << "' started"
-            << std::endl;
-
   if (fileCryptoKey.empty() || blockSize == 0) {
     throw std::runtime_error("Crypto key for file can't be empty and block "
                              "size must be bigger than zero");
@@ -175,7 +169,6 @@ AESHelper::DecryptFile(std::filesystem::path const &encryptedFilePath,
             << std::setw(21) << "]" << std::setfill(' ') << std::left
             << std::setw(79) << byteProgress << std::right << std::endl;
 
-  std::cout << "AES decryption of file finished" << std::endl;
   return decryptedFileBytes;
 }
 

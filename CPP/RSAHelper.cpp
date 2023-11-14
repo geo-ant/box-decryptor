@@ -9,7 +9,6 @@ std::vector<byte>
 RSAHelper::DecryptFileKey(const std::string &encryptedFileKey,
                           const std::string &decryptedPrivateKey) {
   std::vector<byte> decryptedFileKey;
-  std::cout << "RSA decryption of data started" << std::endl;
 
   if (decryptedPrivateKey.size() > 0) {
     // encrypted file key is base 64 encoded
@@ -53,7 +52,6 @@ RSAHelper::DecryptFileKey(const std::string &encryptedFileKey,
     // max decrypted length to the actual decrypted length
     decryptedFileKey.resize(result.messageLength);
 
-    std::cout << "RSA decryption finished" << std::endl;
     return decryptedFileKey;
   } else {
     throw std::runtime_error(

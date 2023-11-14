@@ -5,26 +5,29 @@
 #include "HashHelper.h"
 #include "PBKDF2Helper.h"
 #include "RSAHelper.h"
+#include "commandline.hpp"
 #include "util.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
 
 int main(int argc, char *argv[]) {
-  auto exe_name = std::string(argv[0]);
-
-  if (argc < 4) {
-    std::cout << "Usage: " << exe_name << " "
-              << "[path to .bckey file] "                      // argv[1]
-              << "[path to encrypted file] "                   // argv[2]
-              << "[pwd] "                                      // argv[3]
-              << "[path for output (optional)] " << std::endl; // argv[4]
-    return 0;
-  }
-
-  // for the sake of keeping this program short just catch
-  // all exceptions in one place and show the error before exiting
   try {
+
+    auto exe_name = std::string(argv[0]);
+    auto options = commandline::parse_commandline(argc, argv);
+
+    if (argc < 4) {
+      std::cout << "Usage: " << exe_name << " "
+                << "[path to .bckey file] "                      // argv[1]
+                << "[path to encrypted file] "                   // argv[2]
+                << "[pwd] "                                      // argv[3]
+                << "[path for output (optional)] " << std::endl; // argv[4]
+      return 0;
+    }
+
+    // for the sake of keeping this program short just catch
+    // all exceptions in one place and show the error before exiting
     std::filesystem::path const keyfilePath(argv[1]);
     std::filesystem::path const encryptedFilePath(argv[2]);
     std::string const password(argv[3]);
@@ -51,7 +54,6 @@ int main(int argc, char *argv[]) {
     // =============================================
     // RSA decryption of file information (header)
     // =============================================
-
     auto const decryptedFileBytes =
         util::decrypt_file(encryptedFilePath, decryptedPrivateKey);
 
@@ -59,7 +61,9 @@ int main(int argc, char *argv[]) {
     util::write_file(outputFilePath, decryptedFileBytes);
 
     std::cout << "Successfully decrypted file '";
-  } catch (const std::exception &e) {
+  } catch (commandline::Error const &e) {
+    return e.exit();
+  } catch (std::exception const &e) {
     std::cerr << e.what() << std::endl;
   }
 

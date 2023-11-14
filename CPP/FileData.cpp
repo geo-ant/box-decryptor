@@ -10,9 +10,6 @@
 // but for the purpose of demonstrating which infos are needed from
 // the file header simple string searches should be sufficient
 FileData::FileData(const std::filesystem::path &encryptedFilePath) {
-  std::cout << "Parsing header of encrypted file: '" << encryptedFilePath << "'"
-            << std::endl;
-
   if (encryptedFilePath.extension() != ".bc") {
     throw std::runtime_error(
         "Given filepath does not have the right extension ('.bc'), please "
@@ -130,8 +127,6 @@ FileData::FileData(const std::filesystem::path &encryptedFilePath) {
   } else {
     throw std::runtime_error("Could not find file key in file header");
   }
-
-  std::cout << "Parsing finished" << std::endl;
 }
 
 std::string FileData::GetEncryptedFileKey() const {

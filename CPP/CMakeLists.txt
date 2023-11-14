@@ -37,6 +37,7 @@ add_executable(
   PBKDF2Helper.cpp
   util.cpp
   RSAHelper.cpp
+  commandline.cpp
   main.cpp)
 
 target_include_directories(bc-decrypt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/
@@ -82,3 +83,6 @@ add_custom_command(
 # compare it to the good file use the cmake testing framework  to do this
 add_test(NAME test-decrypt COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test-decrypt.sh
                                    helloworld.txt.bc helloworld.txt.good)
+
+# hmm, this does not quite work as I thought it would.
+install(TARGETS bc-decrypt DESTINATION bin)
