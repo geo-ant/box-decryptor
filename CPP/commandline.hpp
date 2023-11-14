@@ -30,17 +30,18 @@ using Options = std::variant<SingleFileDecryptOptions, DirectoryDecriptOptions>;
 
 class Error : std::exception {
 public:
+  Error(int code) : code(code) {}
+
   char const *what() const noexcept override {
     // don't actually use what, use exit() which will give the return
     // code and prints a nice message to the terminal
     return "Error parsing commandline arguments";
   }
 
-  int exit() const { return app ? app->exit(error) : -1337; }
+  int error_code() const { return code; }
 
 private:
-  CLI::ParseError error;
-  std::unique_ptr<CLI::App> app;
+  int code;
 };
 
 /// return the strongly type options or thrown an exception

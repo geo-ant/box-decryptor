@@ -4,12 +4,12 @@
 # it needs the boxcryptor pasword and keyfile to be set as environment variables,
 # see below
 
-if [-y "$BOXCRYPTOR_PASSWORD" ]; then
+if [ -z "$BOXCRYPTOR_PASSWORD" ]; then
 	echo "BOXCRYPTOR_PASSWORD environment variable is not set"
 	exit 1
 fi
 
-if [-y "$BOXCRYPTOR_KEYFILE" ]; then
+if [ -z "$BOXCRYPTOR_KEYFILE" ]; then
 	echo "BOXCRYPTOR_KEYFILE environment variable is not set"
 	exit 1
 fi

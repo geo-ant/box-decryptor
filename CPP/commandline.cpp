@@ -1,4 +1,6 @@
 #include "commandline.hpp"
+#include "CLI11/CLI11.hpp"
+#include <memory>
 
 using namespace commandline;
 
@@ -17,33 +19,40 @@ static void add_user_account_options(cli11::App *app,
 Options commandline::parse_commandline(int argc,
                                        char const *const *const argv) {
 
-  auto app = cli11::App{"Boxcrytor Decryptor"};
-  app.require_subcommand(1);
-
-  SingleFileDecryptOptions single_file_options;
-  DirectoryDecriptOptions directory_options;
-
-  auto single_file_subcommand =
-      app.add_subcommand("file", "Decrypt a single file");
-  single_file_subcommand
-      ->add_option("-o,--output", single_file_options.output_file,
-                   "an optional name for the decrypted file")
-      ->required(false);
-  single_file_subcommand
-      ->add_option("-i,--input", single_file_options.encrypted_file,
-                   "The encrypted file you want to decrypt")
-      ->required(true);
-  add_user_account_options(single_file_subcommand,
-                           single_file_options.user_account_info);
-
-  /* auto directory_subcommand = app.add_subcommand("dir", "Decrypt a
-   * directory"); */
-
+  auto app = cli11::App("Boxcryptor Decryptor");
   try {
-    app.parse(argc, argv);
-  } catch (const cli11::ParseError &e) {
-    throw 1;
-  }
+    app.require_subcommand(1);
 
-  throw 1;
+    SingleFileDecryptOptions single_file_options;
+    DirectoryDecriptOptions directory_options;
+
+    auto single_file_subcommand =
+        app.add_subcommand("file", "Decrypt a single file");
+    single_file_subcommand
+        ->add_option("-o,--output", single_file_options.output_file,
+                     "an optional name for the decrypted file")
+        ->required(false);
+    single_file_subcommand
+        ->add_option("-i,--input", single_file_options.encrypted_file,
+                     "The encrypted file you want to decrypt")
+        ->required(true);
+    add_user_account_options(single_file_subcommand,
+                             single_file_options.user_account_info);
+
+    auto directory_subcommand =
+        app.add_subcommand("dir", "Decrypt a directory");
+
+    app.parse(argc, argv);
+
+    if (app.got_subcommand(single_file_subcommand)) {
+      return single_file_options;
+    } else if (app.got_subcommand(directory_subcommand)) {
+      return directory_options;
+    } else {
+      // indicates a bug in the program
+      throw std::runtime_error("Unknown subcommand");
+    }
+  } catch (const cli11::ParseError &e) {
+    throw commandline::Error(app.exit(e));
+  }
 }

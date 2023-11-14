@@ -62,9 +62,11 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Successfully decrypted file '";
   } catch (commandline::Error const &e) {
-    return e.exit();
+    // help message has already been printed
+    return e.error_code();
   } catch (std::exception const &e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << "Error: " << e.what() << std::endl;
+    return -1;
   }
 
   return 0;
