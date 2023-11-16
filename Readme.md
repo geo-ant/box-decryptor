@@ -1,22 +1,26 @@
 # Box Cryptor File Decryptor
 This is a fork of the original boxcryptor single file descriptor repo with 
-some major usability improvements and a bit of future proofing. 
+some major usability improvements and a bit of future proofing. It may be 
+helpful to some that cannot get the original boxcryptor executables to work 
+but I take absolutely no responsibility if it utterly destroys your files, see 
+the section on warning and licensing.
 
 ## Context
 [Boxcryptor](https://www.boxcryptor.com/en/) was bought by dropbox and it seems
 their boxcryptor service is slowly dying. Unfortunately the boxcryptor portable apps
 that I tried (for Linux and Mac) did not help me as much to decrypt my files
 because they would constantly give errors when downloading files from my dropbox.
-That gave me a burst of panic because as of now I have tons of boxcryptr encrypted
+That gave me a burst of panic because as of now I have tons of boxcryptor encrypted
 files (`*.bc`) which might become useless in future. That's a problem.
 
 There's an [off-migration guide](https://support.boxcryptor.com/en/help/faq-and-troubleshooting/portable/)
 but it works pretty badly with the portable version of boxcryptor which I need 
 because I am on linux. I'll try the other versions again but none of that is 
-confidence inspiring. What if I am stuck with a dropbox full of encrypted files
+inspiring a lot of confidence. What if I am stuck with a dropbox full of encrypted files
 and boxcryptor is out of business?
 
 ## Solution
+
 Luckily someone at that company foresaw that problem and open sourced a repository
 which produces an executable that can decrypt single files. For that to work
 we need:
@@ -31,6 +35,7 @@ to do that below) and then use the executable as described below to point
 it to a single file to decrypt it.
 
 ## Building the Executable
+
 The original repo contained source code in C++, Java, and C#. Since this
 is a fork of this repo, we can still recover that from the git history if we wanted,
 but we should not have to. For this branch I have trimmed it down to the C++
@@ -41,7 +46,7 @@ library version 7.0.0 in the `libcryptopp700` directory. It can be built by
 running `make` inside that directory, but it's not necessary to do that
 by hand, because I have set up the a cmake build file that takes care of this.
 
-To build the executable
+To build the executable go into your shell and execute the following commands
 
 ```shell
 $ cd CPP
@@ -49,30 +54,55 @@ $ mkdir build && cd build
 $ cmake ..
 $ cmake --build .
 ```
-This requires CMake, make, and C++ compiler that speaks at least C++14, which almost
-all compilers do unless they are horribly out of date. The final linking step
-takes a long time when building for the first time because the crypto++ library
+
+This requires CMake, make, and C++ compiler that speaks at least C++17, which many
+compilers do unless they are pretty out of date. The final linking step
+takes a long time when building for the first time, because the crypto++ library
 is built in the background. Everything should finish without problems and you
-now have the `bc-decrypt` executable that you can use as described below in
-the original readme.
+now have the `bc-decrypt` executable in your `build` directory that you can use as 
+described in the next section.
 
-## Original Readme (incl Manual)
-What follows are the contents of the original readme, which still apply.
+## Usage
 
-### USE WITH CAUTION
-**This project is intended as a documentation on how to decrypt files encrypted with Boxcryptor (2.x). Only use it with copies of your files and never use it in a production environment.
-When using this software you agree that Secomba GmbH will not accept any responsibility for any potential loss of data.**
+The executable is self documenting which is why I won't go into much detail here 
+because that might go out of sync with the actual commands. Just in general:
+this is a command line app that is executed from the terminal.
 
-### Description
-The purpose of this repository is to show / document how to decrypt Boxcryptor files (.bc) with your individual keyfile (.bckey) and your password as input. If you want to know more about the decryption process or include similiar functionality in your own applications you can have a look at the source code in your preferred language.
-For information about the build process please consult the corresponding readme files in the language subfolders.
-**Please also note that you should only give sensitive information like the password to your Boxcryptor account (especially in combination with your personal .bckey-file) to applications you trust, we therefore recommend you having a look at the source code to be absolutely sure how the password is used before doing so.**
+If you give it the argument `--help` or `-h` it will print a help text. For example
 
-### Usage
-After having successfully build the application you can run it with the following command line arguments:
-1. The path to your personal .bckey-file (you can get this file by following this guide: https://www.boxcryptor.com/en/help/boxcryptor-account/windows/#export-your-keys)
-2. The path to the encrypted file you want to decrypt
-3. The password to your Boxcryptor account
-4. Optionally: The path where the decrypted file should be saved to (if not specified, the output will be derived from the encrypted file and will be located in the same folder)
+```shell 
+$ ./bc-decrypt --help 
+```
 
-If your input was correct, you should now have the decrypted file at the path you specified.
+will print a help text that tells you that a subcommand is required. The subcommands 
+(at this time) are either `file` or `dir` which control whether the decryption
+is performed for a single file or for a complete directory. If you again pass 
+`--help` to the subcommands, like so:
+
+```shell
+$ ./bc-decrypt file --help 
+```
+
+If will give you the command line options it required. We need to pass the 
+boxcryptor password, the keyfile and the file we want to decrypt. Optionally
+we can also specify how the output file is called. If we don't specify that, it 
+will be called like the encrypted file with the `.bc` stripped.
+
+# License and Warning
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in 
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
