@@ -97,16 +97,31 @@ static void decrypt_dir(Iter directory_iter,
                      std::filesystem::directory_entry>,
       "Iter must be an iterator over std::filesystem::directory_entry");
 
-  for (auto const &file_path : directory_iter) {
-    if (file_path.is_regular_file() && file_path.path().extension() == ".bc") {
-      std::cout << "Decrypting file: " << file_path.path() << '\n';
-      auto const decryptedFileBytes =
-          util::decrypt_file(file_path.path(), decryptedPrivateKey);
+  std::vector<std::filesystem::directory_entry> failures;
 
-      auto const outputFilePath =
-          std::filesystem::path(file_path.path()).replace_extension();
+  for (auto const &entry : directory_iter) {
+    if (entry.is_regular_file() && entry.path().extension() == ".bc") {
+      try {
+        std::cout << "Decrypting file: " << entry.path() << '\n';
+        auto const decryptedFileBytes =
+            util::decrypt_file(entry.path(), decryptedPrivateKey);
 
-      util::write_file(outputFilePath, decryptedFileBytes);
+        auto const outputFilePath =
+            std::filesystem::path(entry.path()).replace_extension();
+
+        util::write_file(outputFilePath, decryptedFileBytes);
+      } catch (std::exception const &e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        failures.push_back(entry);
+      }
+    }
+  }
+  if (failures.empty()) {
+    std::cout << "All files (hopefully) successfully decrypted\n";
+  } else {
+    std::cerr << "The following files could not be decrypted:\n";
+    for (auto const &entry : failures) {
+      std::cerr << entry.path() << '\n';
     }
   }
 }
