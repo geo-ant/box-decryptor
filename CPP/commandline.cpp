@@ -33,7 +33,8 @@ Options commandline::parse_commandline(int argc,
                      "an optional name for the decrypted file")
         ->required(false);
     single_file_subcommand
-        ->add_option("-i,--input", single_file_options.encrypted_file,
+        /* ->add_option("-i,--input", single_file_options.encrypted_file, */
+        ->add_option("filename", single_file_options.encrypted_file,
                      "The encrypted file you want to decrypt")
         ->required(true);
     add_user_account_options(single_file_subcommand,
@@ -41,6 +42,20 @@ Options commandline::parse_commandline(int argc,
 
     auto directory_subcommand =
         app.add_subcommand("dir", "Decrypt a directory");
+
+    add_user_account_options(directory_subcommand,
+                             directory_options.user_account_info);
+
+    directory_subcommand
+        ->add_flag("-r,--recursive", directory_options.recursive,
+                   "Recursively decrypt all files in the "
+                   "directory and its subdirectories")
+        ->capture_default_str();
+
+    directory_subcommand
+        ->add_option("directory", directory_options.encrypted_directory,
+                     "The encrypted directory you want to decrypt")
+        ->required(true);
 
     app.parse(argc, argv);
 

@@ -21,7 +21,7 @@ struct SingleFileDecryptOptions {
 };
 
 struct DirectoryDecriptOptions {
-  bool recursive;
+  bool recursive = false;
   std::string encrypted_directory;
   UserAccountInfo user_account_info;
 };

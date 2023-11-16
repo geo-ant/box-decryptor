@@ -20,6 +20,12 @@ namespace util {
 /// @throws exception on error
 std::string decrypt_private_key(AccountData const &account_data);
 
+/// get the decrypted private key from a keyfile  and password
+/// @return decrypted private key
+/// @throws exception on error
+std::string decrypt_private_key(std::filesystem::path const &keyfile_path,
+                                std::string const &password);
+
 /// decrypt the file and return the encrypted data as a vector of bytes
 /// TODO: make this function run on the data read from the file into memory
 /// then we can make it parallel

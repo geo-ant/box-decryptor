@@ -13,6 +13,10 @@ std::string decrypt_private_key(AccountData const &account_data) {
       decryptedPrivateKey);
   return decryptedPrivateKey;
 }
+std::string decrypt_private_key(std::filesystem::path const &keyfile_path,
+                                std::string const &password) {
+  return decrypt_private_key(AccountData(keyfile_path, password));
+}
 
 std::vector<byte> decrypt_file(std::filesystem::path const &encryptedFilePath,
                                std::string decryptedPrivateKey) {

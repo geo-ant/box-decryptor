@@ -7,6 +7,7 @@
 #include "RSAHelper.h"
 #include "commandline.hpp"
 #include "util.hpp"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -14,6 +15,9 @@
 
 static void perform_decryption(commandline::SingleFileDecryptOptions &&);
 static void perform_decryption(commandline::DirectoryDecriptOptions &&);
+template <typename Iter>
+static void decrypt_dir(Iter directory_iter,
+                        std::string const &decryptedPrivateKey);
 
 int main(int argc, char *argv[]) {
   try {
@@ -50,14 +54,8 @@ perform_decryption(commandline::SingleFileDecryptOptions &&options) {
   // ============================================
   // AES decryption of private key in .bckey file
   // =============================================
-
-  // collect information about the user account
-  AccountData const accountInfo(keyfilePath, password);
-
-  // decrypt the private key from the .bckey file
-  // this is the same for all files of this account
   std::string const decryptedPrivateKey =
-      util::decrypt_private_key(accountInfo);
+      util::decrypt_private_key(keyfilePath, password);
 
   // =============================================
   // RSA decryption of file information (header)
@@ -68,6 +66,47 @@ perform_decryption(commandline::SingleFileDecryptOptions &&options) {
   // ... and write it to disk
   util::write_file(outputFilePath, decryptedFileBytes);
 
-  std::cout << "...Successfully decrypted file";
+  std::cout << "...Successfully decrypted file\n";
 }
-static void perform_decryption(commandline::DirectoryDecriptOptions &&) {}
+
+static void perform_decryption(commandline::DirectoryDecriptOptions &&options) {
+  std::filesystem::path const keyfilePath(options.user_account_info.keyfile);
+  std::string const password(options.user_account_info.password);
+
+  std::cout << "Directory Decryption process started...\n";
+
+  auto const decryptedPrivateKey =
+      util::decrypt_private_key(keyfilePath, password);
+
+  if (options.recursive) {
+    std::filesystem::recursive_directory_iterator directory_iter(
+        options.encrypted_directory);
+    decrypt_dir(directory_iter, decryptedPrivateKey);
+  } else {
+    std::filesystem::directory_iterator directory_iter(
+        options.encrypted_directory);
+    decrypt_dir(directory_iter, decryptedPrivateKey);
+  }
+}
+
+template <typename Iter>
+static void decrypt_dir(Iter directory_iter,
+                        std::string const &decryptedPrivateKey) {
+  static_assert(
+      std::is_same_v<typename Iter::value_type,
+                     std::filesystem::directory_entry>,
+      "Iter must be an iterator over std::filesystem::directory_entry");
+
+  for (auto const &file_path : directory_iter) {
+    if (file_path.is_regular_file() && file_path.path().extension() == ".bc") {
+      std::cout << "Decrypting file: " << file_path.path() << '\n';
+      auto const decryptedFileBytes =
+          util::decrypt_file(file_path.path(), decryptedPrivateKey);
+
+      auto const outputFilePath =
+          std::filesystem::path(file_path.path()).replace_extension();
+
+      util::write_file(outputFilePath, decryptedFileBytes);
+    }
+  }
+}
