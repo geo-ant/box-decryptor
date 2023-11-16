@@ -35,7 +35,7 @@ if [ -f "$outfile" ]; then
 fi
 
 # Your decryption command here, writing output to a file
-./bc-decrypt file -k "$keyfile" -i "$file_path" -p "$password" -o "$outfile"
+./bc-decrypt file -k "$keyfile" -p "$password" -o "$outfile" "$file_path"
 
 # Compare the output file with the known good file
 if cmp "$known_good_file" "$outfile"; then
