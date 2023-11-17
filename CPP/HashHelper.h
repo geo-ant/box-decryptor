@@ -1,16 +1,19 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <vector>
 #include "TypeDefs.h"
+#include <vector>
 
-class HashHelper
-{
+class HashHelper {
 public:
-	HashHelper() = delete;
+  HashHelper() = delete;
 
-	static bool ComputeSHA256HMAC(const std::vector<byte>& data, const std::vector<byte>& key, std::vector<byte>& hmac, bool silent = false);
-	static bool ComputeSHA512HMAC(const std::vector<byte>& data, const std::vector<byte>& key, std::vector<byte>& hmac, bool silent = false);
+  static bool ComputeSHA256HMAC(const std::vector<byte> &data,
+                                const std::vector<byte> &key,
+                                std::vector<byte> &hmac, bool silent = true);
+  static bool ComputeSHA512HMAC(const std::vector<byte> &data,
+                                const std::vector<byte> &key,
+                                std::vector<byte> &hmac, bool silent = true);
 };
 
 #endif

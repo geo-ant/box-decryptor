@@ -1,90 +1,127 @@
-#include <fstream>
-#include <iostream>	
-#include <string>
-#include "Base64Helper.h"
-#include "PBKDF2Helper.h"
-#include "HashHelper.h"
-#include "AccountData.h"
-#include "FileData.h"
 #include "AESHelper.h"
+#include "AccountData.h"
+#include "Base64Helper.h"
+#include "FileData.h"
+#include "HashHelper.h"
+#include "PBKDF2Helper.h"
 #include "RSAHelper.h"
+#include "commandline.hpp"
+#include "util.hpp"
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <variant>
 
-int main(int argc, char *argv[])
-{
-  auto exe_name = std::string(argv[0]);
+static void perform_decryption(commandline::SingleFileDecryptOptions &&);
+static void perform_decryption(commandline::DirectoryDecriptOptions &&);
+template <typename Iter>
+static void decrypt_dir(Iter directory_iter,
+                        std::string const &decryptedPrivateKey);
 
-	if (argc < 4)
-	{
-		std::cout << "Usage: " << exe_name << " "
-			<< "[path to .bckey file] "
-			<< "[path to encrypted file] "
-			<< "[pwd] "
-			<< "[path for output (optional)] "
-			<< std::endl;
-		return 0;
-	}
+int main(int argc, char *argv[]) {
+  try {
 
-	// for the sake of keeping this program short just catch
-	// all exceptions in one place and show the error before exiting
-	try
-	{
-		std::cout << "Decryption process started" << std::endl;
+    auto exe_name = std::string(argv[0]);
+    auto options = commandline::parse_commandline(argc, argv);
 
-		// ============================================
-		// AES decryption of private key in .bckey file
-		// =============================================
-    
-    auto password = std::string(argv[3]);
-    std::cout << "Password: " << password << std::endl;
+    std::visit([](auto &&opt) { perform_decryption(std::move(opt)); },
+               std::move(options));
 
-		// collect information about the user account
-		AccountData accountInfo;
-		accountInfo.ParseBCKeyFile(std::string(argv[1]));
-		accountInfo.SetPassword(password);
+  } catch (commandline::Error const &e) {
+    // help message has already been printed
+    return e.error_code();
+  } catch (std::exception const &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return -1;
+  }
 
-		// decrypt the private key from the .bckey file
-		std::string decryptedPrivateKey;
-		AESHelper::DecryptDataPBKDF2(accountInfo.GetEncryptedPrivateKey(), accountInfo.GetPassword(), accountInfo.GetPBKDF2Salt(), accountInfo.GetPBKDF2Iterations(), decryptedPrivateKey);
+  return 0;
+}
 
-		// =============================================
-		// RSA decryption of file information (header)
-		// =============================================
+static void
+perform_decryption(commandline::SingleFileDecryptOptions &&options) {
+  std::filesystem::path const keyfilePath(options.user_account_info.keyfile);
+  std::filesystem::path const encryptedFilePath(options.encrypted_file);
+  std::string const password(options.user_account_info.password);
+  std::filesystem::path const outputFilePath =
+      options.output_file.has_value()
+          ? std::filesystem::path(options.output_file.value())
+          : std::filesystem::path(encryptedFilePath).replace_extension();
 
-		// collect information about the file to be decrypted
-		FileData fileData;
-		auto outputFilepath = argc > 4 ? std::string(argv[4]) : "";
-		fileData.ParseHeader(std::string(argv[2]), outputFilepath);
+  std::cout << "Decryption process started..." << std::endl;
 
-		// decrypt the file key (from file header) used for decryption of file data
-		std::vector<byte> decryptedFileKey;
-		RSAHelper::DecryptData(fileData.GetEncryptedFileKey(), decryptedPrivateKey, decryptedFileKey);
-		
-		auto fileCryptoKey = std::vector<byte>(decryptedFileKey.begin() + 32, decryptedFileKey.begin() + 64);
+  // ============================================
+  // AES decryption of private key in .bckey file
+  // =============================================
+  std::string const decryptedPrivateKey =
+      util::decrypt_private_key(keyfilePath, password);
 
-		// =============================================
-		// AES decryption of encrypted file
-		// =============================================
+  // =============================================
+  // RSA decryption of file information (header)
+  // =============================================
+  auto const decryptedFileBytes =
+      util::decrypt_file(encryptedFilePath, decryptedPrivateKey);
 
-		// decrypt the file data ...
-		std::vector<byte> decryptedFileBytes;
-		AESHelper::DecryptFile(fileData.GetEncryptedFilePath(), fileCryptoKey, fileData.GetBaseIVec(), fileData.GetBlockSize(), fileData.GetHeaderLen(), fileData.GetCipherPadding(), decryptedFileBytes);
+  // ... and write it to disk
+  util::write_file(outputFilePath, decryptedFileBytes);
 
-		std::ofstream ofs(fileData.GetOutputFilepath(), std::ios::binary);
-		if (!ofs.good())
-		{
-			std::string errorMsg("Can't create encrypted file at location '" + fileData.GetOutputFilepath() + "' (make sure you have the necessary file system rights to write to this location or specify another path)");
-			throw std::runtime_error(errorMsg.c_str());
-		}
-		
-		// ... and write it to disk
-		ofs.write((char *)decryptedFileBytes.data(), decryptedFileBytes.size());
+  std::cout << "...Successfully decrypted file\n";
+}
 
-		std::cout << "Successfully decrypted file '" << fileData.GetEncryptedFilePath() << "', output: '" << fileData.GetOutputFilepath() << "'" << std::endl;
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
-	
-	return 0;
+static void perform_decryption(commandline::DirectoryDecriptOptions &&options) {
+  std::filesystem::path const keyfilePath(options.user_account_info.keyfile);
+  std::string const password(options.user_account_info.password);
+
+  std::cout << "Directory Decryption process started...\n";
+
+  auto const decryptedPrivateKey =
+      util::decrypt_private_key(keyfilePath, password);
+
+  if (options.recursive) {
+    std::filesystem::recursive_directory_iterator directory_iter(
+        options.encrypted_directory);
+    decrypt_dir(directory_iter, decryptedPrivateKey);
+  } else {
+    std::filesystem::directory_iterator directory_iter(
+        options.encrypted_directory);
+    decrypt_dir(directory_iter, decryptedPrivateKey);
+  }
+}
+
+template <typename Iter>
+static void decrypt_dir(Iter directory_iter,
+                        std::string const &decryptedPrivateKey) {
+  static_assert(
+      std::is_same_v<typename Iter::value_type,
+                     std::filesystem::directory_entry>,
+      "Iter must be an iterator over std::filesystem::directory_entry");
+
+  std::vector<std::filesystem::directory_entry> failures;
+
+  for (auto const &entry : directory_iter) {
+    if (entry.is_regular_file() && entry.path().extension() == ".bc") {
+      try {
+        std::cout << "Decrypting file: " << entry.path() << '\n';
+        auto const decryptedFileBytes =
+            util::decrypt_file(entry.path(), decryptedPrivateKey);
+
+        auto const outputFilePath =
+            std::filesystem::path(entry.path()).replace_extension();
+
+        util::write_file(outputFilePath, decryptedFileBytes);
+      } catch (std::exception const &e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        failures.push_back(entry);
+      }
+    }
+  }
+  if (failures.empty()) {
+    std::cout << "All files (hopefully) successfully decrypted\n";
+  } else {
+    std::cerr << "The following files could not be decrypted:\n";
+    for (auto const &entry : failures) {
+      std::cerr << entry.path() << '\n';
+    }
+  }
 }
